@@ -11,6 +11,7 @@ import {
 } from 'react';
 
 import { resolveAudioSource, type Piece } from '../content/source';
+import { useProgress } from '../progress/ProgressProvider';
 
 /**
  * Playback that outlives the player screen.
@@ -117,6 +118,35 @@ function PlaybackEngine({
 }) {
   const player = useAudioPlayer(resolveAudioSource(piece), { updateInterval: 250 });
   const status = useAudioPlayerStatus(player);
+  const { recordOpen, recordListening } = useProgress();
+
+  // Counted once per piece, when it's opened.
+  useEffect(() => {
+    recordOpen(piece.trigger);
+  }, [piece.trigger, recordOpen]);
+
+  /**
+   * Accrue time actually listened, by differencing the playhead.
+   *
+   * Deliberately not `duration` — someone who opens a 25-minute story and
+   * drifts off after four minutes listened for four. And deliberately not
+   * wall-clock, which would keep counting while paused or buffering.
+   *
+   * Deltas outside a sane tick window are discarded, so seeking forward can't
+   * award minutes nobody heard and seeking back can't subtract them.
+   */
+  const lastPosition = useRef<number | null>(null);
+  useEffect(() => {
+    if (!status.playing) {
+      lastPosition.current = null;
+      return;
+    }
+    const previous = lastPosition.current;
+    lastPosition.current = status.currentTime;
+    if (previous === null) return;
+    const delta = status.currentTime - previous;
+    if (delta > 0 && delta <= 2) recordListening(delta);
+  }, [status.playing, status.currentTime, recordListening]);
 
   useEffect(() => {
     registerControls({

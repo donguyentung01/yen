@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { MiniPlayer } from '../components/MiniPlayer';
 import { PlaybackProvider } from '../playback/PlaybackProvider';
+import { ProgressProvider } from '../progress/ProgressProvider';
 import { color } from '../theme/tokens';
 
 export default function RootLayout() {
@@ -29,7 +30,8 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <PlaybackProvider>
+      <ProgressProvider>
+        <PlaybackProvider>
         <StatusBar style="light" />
         <Stack
           screenOptions={{
@@ -49,7 +51,8 @@ export default function RootLayout() {
           player screen and when nothing is loaded.
         */}
         <MiniPlayer />
-      </PlaybackProvider>
+        </PlaybackProvider>
+      </ProgressProvider>
     </SafeAreaProvider>
   );
 }

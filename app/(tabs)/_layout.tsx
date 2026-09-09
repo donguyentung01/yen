@@ -31,11 +31,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="stats"
+        name="journey"
         options={{
-          title: COPY.tabs.stats,
+          title: COPY.tabs.journey,
           tabBarIcon: ({ color: c }) => (
-            <MaterialCommunityIcons name="chart-bar" size={22} color={c} />
+            <MaterialCommunityIcons name="map-marker-path" size={22} color={c} />
           ),
         }}
       />

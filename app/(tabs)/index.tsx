@@ -7,13 +7,12 @@ import { TriggerTile } from '../../components/TriggerTile';
 import { StreakPill } from '../../components/StreakPill';
 import { color, fontSize, radius, spacing, tint } from '../../theme/tokens';
 import { COPY, TRIGGERS } from '../../content/triggers';
-
-/** Hardcoded until streak tracking lands — see the plan's out-of-scope list. */
-const PLACEHOLDER_STREAK = 5;
+import { useProgress } from '../../progress/ProgressProvider';
 
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { progress } = useProgress();
 
   return (
     <ScrollView
@@ -34,7 +33,7 @@ export default function Home() {
           </View>
           <Text style={styles.brand}>{COPY.brand}</Text>
         </View>
-        <StreakPill days={PLACEHOLDER_STREAK} />
+        <StreakPill days={progress.days.length} />
       </View>
 
       <Text style={styles.greeting}>{COPY.home.greeting}</Text>

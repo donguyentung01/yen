@@ -158,10 +158,23 @@ export const COPY = {
     greetingSub: 'Chọn 1 cái thấy đúng vibe nhất',
   },
 
-  /** Placeholder tabs. Honest about being unfinished rather than faking data. */
-  stats: {
-    title: 'Chưa có gì để xem đâu',
-    body: 'Nghe vài bữa rồi quay lại.',
+  /**
+   * The journey screen. Every line here is phrased so it can only ever be good
+   * news — nothing on this screen is allowed to read as a reprimand.
+   */
+  journey: {
+    /** Shown before there's any history worth summarising. */
+    emptyTitle: 'Chưa có gì để xem đâu',
+    emptyBody: 'Nghe vài bữa rồi quay lại.',
+
+    /** Headline: total time listened. */
+    listenedLabel: 'Bạn đã dành cho mình',
+    /** Days the app was used — a total, never a streak that can break. */
+    daysLabel: 'ngày có mặt ở đây',
+    /** Prefix for the most-used trigger, e.g. "Bạn hay tới đây khi… Khó ngủ". */
+    topTriggerLabel: 'Bạn hay tới đây khi',
+    /** Shown instead when no single trigger leads yet. */
+    noPatternYet: 'Chưa đủ để thấy thói quen gì đâu',
   },
   profile: {
     title: 'Chưa có gì ở đây',
@@ -180,10 +193,30 @@ export const COPY = {
 
   tabs: {
     home: 'Trang chủ',
-    stats: 'Thống kê',
+    /**
+     * "Hành trình", not "Thống kê" — the doc's journey-map framing, and it
+     * avoids the clinical dashboard register the doc bans.
+     */
+    journey: 'Hành trình',
     profile: 'Cá nhân',
   },
 };
+
+/**
+ * "4 tiếng 20 phút" — total time listened.
+ *
+ * Rounds to whole minutes; under a minute reads as "chưa tới 1 phút" rather
+ * than "0 phút", which would look like the app forgot.
+ */
+export function formatListened(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  if (minutes < 1) return 'chưa tới 1 phút';
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (hours === 0) return `${rest} phút`;
+  if (rest === 0) return `${hours} tiếng`;
+  return `${hours} tiếng ${rest} phút`;
+}
 
 /** "15 phút" — the only duration shape the UI uses. */
 export function formatDuration(seconds: number): string {
