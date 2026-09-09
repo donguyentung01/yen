@@ -3,7 +3,7 @@ import { Text, View, StyleSheet } from 'react-native';
 import { color, fontSize, spacing } from '../theme/tokens';
 
 /**
- * Used by the stats and profile tabs.
+ * Used by Hành trình before there is any history to show.
  *
  * These are navigable but genuinely unbuilt, and they say so — showing invented
  * numbers in a product whose whole pitch is not bullshitting the user would be

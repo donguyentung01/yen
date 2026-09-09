@@ -9,7 +9,7 @@ import { CONTENT_TYPES, COPY } from '../content/triggers';
 
 /** Roughly the tab bar's height, so the bar sits above it rather than under. */
 const TAB_BAR_HEIGHT = 49;
-const TAB_ROUTES = ['/', '/stats', '/profile'];
+const TAB_ROUTES = ['/', '/journey'];
 
 /**
  * The collapsed player, Spotify-style: dismissing the full screen minimises to

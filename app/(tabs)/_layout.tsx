@@ -39,15 +39,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: COPY.tabs.profile,
-          tabBarIcon: ({ color: c }) => (
-            <MaterialCommunityIcons name="account" size={22} color={c} />
-          ),
-        }}
-      />
     </Tabs>
   );
 }

@@ -176,11 +176,6 @@ export const COPY = {
     /** Shown instead when no single trigger leads yet. */
     noPatternYet: 'Chưa đủ để thấy thói quen gì đâu',
   },
-  profile: {
-    title: 'Chưa có gì ở đây',
-    body: 'Cái này để sau.',
-  },
-
   player: {
     /** Accessibility labels — spoken, never displayed. */
     playA11y: 'Phát',
@@ -198,7 +193,6 @@ export const COPY = {
      * avoids the clinical dashboard register the doc bans.
      */
     journey: 'Hành trình',
-    profile: 'Cá nhân',
   },
 };
 
