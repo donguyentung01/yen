@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
   StyleSheet,
+  type TextStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,6 +19,14 @@ import { color, fontSize, radius, spacing, tint, hairline } from '../theme/token
 import { COPY } from '../content/triggers';
 
 type State = 'writing' | 'sending' | 'sent' | 'failed';
+
+/**
+ * Browsers draw their own blue focus ring on top of the input's border, which
+ * looks broken against the dark theme. `outlineStyle` is a react-native-web
+ * extension with no equivalent in RN's types, hence the cast; null on native.
+ */
+const WEB_NO_OUTLINE =
+  Platform.OS === 'web' ? ({ outlineStyle: 'none' } as unknown as TextStyle) : null;
 
 /**
  * In-app feedback.
@@ -77,7 +86,7 @@ export default function Feedback() {
             <Text style={styles.subtitle}>{COPY.feedback.subtitle}</Text>
 
             <TextInput
-              style={styles.input}
+              style={[styles.input, WEB_NO_OUTLINE]}
               value={message}
               onChangeText={(text) => {
                 setMessage(text);
