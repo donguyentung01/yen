@@ -1,15 +1,12 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
 import { ScrollView, Text, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TriggerTile } from '../../components/TriggerTile';
-import { QuickPlayCard } from '../../components/QuickPlayCard';
 import { StreakPill } from '../../components/StreakPill';
 import { color, fontSize, radius, spacing, tint } from '../../theme/tokens';
 import { COPY, TRIGGERS } from '../../content/triggers';
-import { getQuickPlayPieces, type Piece } from '../../content/source';
 
 /** Hardcoded until streak tracking lands — see the plan's out-of-scope list. */
 const PLACEHOLDER_STREAK = 5;
@@ -17,17 +14,6 @@ const PLACEHOLDER_STREAK = 5;
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [quickPlay, setQuickPlay] = useState<Piece[]>([]);
-
-  useEffect(() => {
-    let active = true;
-    getQuickPlayPieces().then((pieces) => {
-      if (active) setQuickPlay(pieces);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   return (
     <ScrollView
@@ -55,8 +41,12 @@ export default function Home() {
       <Text style={styles.greetingSub}>{COPY.home.greetingSub}</Text>
 
       {/*
-        Two-column grid built from pairs rather than flexWrap, so a tile in a
-        short row still stretches to half width instead of hugging its text.
+        The grid is the whole screen. Picking how you feel is the only decision
+        the home screen asks for — a browse row underneath would offer a second,
+        competing way in and undercut that.
+
+        Built from pairs rather than flexWrap, so a tile in a short row still
+        stretches to half width instead of hugging its text.
       */}
       <View style={styles.grid}>
         {chunk(TRIGGERS, 2).map((row, i) => (
@@ -73,21 +63,6 @@ export default function Home() {
           </View>
         ))}
       </View>
-
-      <Text style={styles.sectionHeading}>{COPY.home.quickPlayHeading}</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.quickPlayRow}
-      >
-        {quickPlay.map((piece) => (
-          <QuickPlayCard
-            key={piece.id}
-            piece={piece}
-            onPress={() => router.push(`/player/${piece.id}`)}
-          />
-        ))}
-      </ScrollView>
     </ScrollView>
   );
 }
@@ -146,7 +121,6 @@ const styles = StyleSheet.create({
   },
   grid: {
     gap: spacing.sm,
-    marginBottom: 18,
   },
   gridRow: {
     flexDirection: 'row',
@@ -154,15 +128,5 @@ const styles = StyleSheet.create({
   },
   gridSpacer: {
     flex: 1,
-  },
-  sectionHeading: {
-    fontSize: fontSize.meta,
-    fontWeight: '500',
-    color: color.textSecondary,
-    marginBottom: 10,
-  },
-  quickPlayRow: {
-    gap: spacing.sm,
-    paddingRight: spacing.lg,
   },
 });

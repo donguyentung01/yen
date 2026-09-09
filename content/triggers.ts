@@ -156,7 +156,6 @@ export const COPY = {
   home: {
     greeting: 'Ê, nay sao rồi?',
     greetingSub: 'Chọn 1 cái thấy đúng vibe nhất',
-    quickPlayHeading: 'nghe gì đây ta',
   },
 
   /** Placeholder tabs. Honest about being unfinished rather than faking data. */

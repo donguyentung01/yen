@@ -21,7 +21,7 @@
  */
 
 import bundledManifest from './manifest.json';
-import { TRIGGERS, getTrigger, type ContentType, type TriggerId } from './triggers';
+import { getTrigger, type ContentType, type TriggerId } from './triggers';
 
 export interface Piece {
   id: string;
@@ -186,28 +186,6 @@ export async function getTodaysPieces(triggerId: string): Promise<Piece[]> {
   return trigger.sections
     .map((type) => pickForToday(poolFor(m.pieces, triggerId, type), triggerId, type))
     .filter((p): p is Piece => p !== undefined);
-}
-
-/** Every section, for the shortcut row to draw one of each from. */
-const ALL_SECTIONS: ContentType[] = ['breathing', 'meditation', 'story'];
-
-/**
- * The "nghe gì đây ta" shortcut row: one piece per section, each pulled from a
- * different trigger so the row isn't a duplicate of any single tile below it.
- * Which triggers appear shifts by day along with everything else.
- *
- * Only triggers that actually carry a section are eligible for it — otherwise
- * the row would come up short on days it landed on a trigger with no story.
- */
-export async function getQuickPlayPieces(): Promise<Piece[]> {
-  const m = await loadManifest();
-  const today = dayNumber();
-  return ALL_SECTIONS.map((type, i) => {
-    const eligible = TRIGGERS.filter((t) => t.sections.includes(type));
-    if (eligible.length === 0) return undefined;
-    const trigger = eligible[(today + i) % eligible.length];
-    return pickForToday(poolFor(m.pieces, trigger.id, type), trigger.id, type);
-  }).filter((p): p is Piece => p !== undefined);
 }
 
 export async function getPiece(id: string): Promise<Piece | undefined> {
