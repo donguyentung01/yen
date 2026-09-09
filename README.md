@@ -69,8 +69,9 @@ adding an entry — no code change, no app store resubmission.
 ## Audio
 
 ```bash
-npm run audio              # fill in any missing audio, refresh localAudio.ts
-npm run audio -- --force   # regenerate ALL placeholders, overwriting real files
+npm run audio                     # fill in any missing audio
+npm run audio -- --fix-durations  # write real file lengths into the manifest
+npm run audio -- --force          # regenerate ALL placeholders, overwriting real files
 ```
 
 The script does two things. It writes `content/localAudio.ts` — the map Metro
@@ -85,7 +86,13 @@ have real recordings you almost certainly don't want it.
 
 It also warns when a file's real length disagrees with `durationSec` in the
 manifest, which is the easy thing to forget after swapping in a recording — that
-number is what every list in the app displays.
+number is what every list in the app displays. `--fix-durations` writes the
+correct values in rather than just reporting them.
+
+That flag only touches `durationSec`, and only for files that aren't
+placeholder-length, so an unrecorded piece keeps the target duration it was
+planned with. Titles are never touched — only you know what a recording is
+actually called.
 
 Placeholders are 12-second tones, generated rather than borrowed because ambient
 audio pulled off YouTube isn't licensed for redistribution inside an app.
@@ -98,8 +105,16 @@ Convert to m4a and drop it at the path the manifest already names:
 afconvert -f m4af -d aac -b 96000 input.mp3 assets/audio/kho-ngu/story/truyen-01.m4a
 ```
 
-Then update `durationSec` in `content/manifest.json`. Nothing else — the
-require-map already points there.
+Then sync the duration and publish:
+
+```bash
+npm run audio -- --fix-durations        # durationSec now matches the file
+npm run r2:upload -- --only kho-ngu     # push the audio
+npm run r2:upload -- --manifest-only    # push the catalog
+```
+
+Edit the `title` in `content/manifest.json` to match what you actually recorded
+— the filename never needs to change — then push the manifest again.
 
 Bundling stops being viable at around ten real pieces: a 25-minute story is
 roughly 18MB, so the full set lands near half a gigabyte. Move to R2 before

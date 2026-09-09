@@ -17,8 +17,14 @@
  * regenerating — which would have destroyed them. Pass `--force` to regenerate
  * everything anyway (only safe while it's all placeholder).
  *
- *   npm run audio            # fill gaps, warn about duration drift
- *   npm run audio -- --force # regenerate everything
+ *   npm run audio                  # fill gaps, warn about duration drift
+ *   npm run audio -- --fix-durations  # write real file lengths into the manifest
+ *   npm run audio -- --force       # regenerate every placeholder
+ *
+ * `--fix-durations` only touches `durationSec`, and only for files that aren't
+ * placeholder-length — so an unrecorded piece keeps the target duration it was
+ * planned with, and titles are never touched, since only you know what a
+ * recording is actually called.
  *
  * Writes 16-bit mono WAV, then compresses to AAC/m4a with macOS `afconvert`.
  * Without afconvert the files stay .wav.
@@ -39,7 +45,8 @@ const SAMPLE_RATE = 44100;
 const SECONDS = 12;
 const TAU = Math.PI * 2;
 
-const manifest = JSON.parse(readFileSync(join(ROOT, 'content', 'manifest.json'), 'utf8'));
+const MANIFEST_PATH = join(ROOT, 'content', 'manifest.json');
+const manifest = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'));
 
 /**
  * Deterministic PRNG, so a given piece always synthesizes to the same audio.
@@ -189,6 +196,7 @@ if (!canCompress) {
 }
 
 const force = process.argv.includes('--force');
+const fixDurations = process.argv.includes('--fix-durations');
 
 /** Actual length of a file on disk, or null if it can't be read. */
 function actualDuration(file) {
@@ -206,6 +214,8 @@ const entries = [];
 let generated = 0;
 let kept = 0;
 const durationWarnings = [];
+const durationFixes = [];
+let manifestDirty = false;
 
 for (const piece of manifest.pieces) {
   const synth = SYNTH[piece.type];
@@ -230,9 +240,17 @@ for (const piece of manifest.pieces) {
     if (real !== null && Math.abs(real - SECONDS) > 0.5) {
       const drift = Math.abs(real - piece.durationSec) / piece.durationSec;
       if (drift > 0.1) {
-        durationWarnings.push(
-          `  ${piece.path}\n    manifest says ${piece.durationSec}s, file is ${Math.round(real)}s`
-        );
+        if (fixDurations) {
+          durationFixes.push(
+            `  ${piece.path}\n    ${piece.durationSec}s -> ${Math.round(real)}s`
+          );
+          piece.durationSec = Math.round(real);
+          manifestDirty = true;
+        } else {
+          durationWarnings.push(
+            `  ${piece.path}\n    manifest says ${piece.durationSec}s, file is ${Math.round(real)}s`
+          );
+        }
       }
     }
     continue;
@@ -270,11 +288,21 @@ console.log(
   `Audio: ${generated} placeholder${generated === 1 ? '' : 's'} generated, ${kept} existing file${kept === 1 ? '' : 's'} left alone`
 );
 
+if (manifestDirty) {
+  writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + '\n');
+  console.log(
+    `\nUpdated durationSec on ${durationFixes.length} piece${durationFixes.length === 1 ? '' : 's'} in content/manifest.json:`
+  );
+  console.log(durationFixes.join('\n'));
+  console.log('\nPublish it with: npm run r2:upload -- --manifest-only');
+}
+
 if (durationWarnings.length > 0) {
   console.warn(
-    `\n${durationWarnings.length} file${durationWarnings.length === 1 ? ' disagrees' : 's disagree'} with the manifest — update durationSec, it drives what the app displays:`
+    `\n${durationWarnings.length} file${durationWarnings.length === 1 ? ' disagrees' : 's disagree'} with the manifest — durationSec drives what the app displays:`
   );
   console.warn(durationWarnings.join('\n'));
+  console.warn('Fix them automatically with: npm run audio -- --fix-durations');
 }
 
 if (orphans.length > 0) {
