@@ -3,6 +3,7 @@ import { ScrollView, Text, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PlaceholderScreen } from '../../components/PlaceholderScreen';
+import { SettingsSection } from '../../components/SettingsSection';
 import { useProgress } from '../../progress/ProgressProvider';
 import { topTrigger } from '../../progress/store';
 import { color, fontSize, radius, spacing, tint, hairline } from '../../theme/tokens';
@@ -21,12 +22,22 @@ export default function Journey() {
   const insets = useSafeAreaInsets();
 
   // Nothing to summarise until something has actually been listened to.
+  // Settings stay reachable before there's any history — otherwise a brand new
+  // user has no way to send feedback, which is exactly who has most to say.
   if (loading || progress.days.length === 0) {
     return (
-      <PlaceholderScreen
-        title={COPY.journey.emptyTitle}
-        body={COPY.journey.emptyBody}
-      />
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.xl }]}
+      >
+        <View style={styles.emptyBlock}>
+          <PlaceholderScreen
+            title={COPY.journey.emptyTitle}
+            body={COPY.journey.emptyBody}
+          />
+        </View>
+        <SettingsSection />
+      </ScrollView>
     );
   }
 
@@ -79,6 +90,8 @@ export default function Journey() {
       ) : (
         <Text style={styles.noPattern}>{COPY.journey.noPatternYet}</Text>
       )}
+
+      <SettingsSection />
     </ScrollView>
   );
 }
@@ -136,6 +149,9 @@ const styles = StyleSheet.create({
   cardLabel: {
     fontSize: fontSize.metaSmall,
     color: color.textSecondary,
+  },
+  emptyBlock: {
+    height: 260,
   },
   noPattern: {
     fontSize: fontSize.metaSmall,

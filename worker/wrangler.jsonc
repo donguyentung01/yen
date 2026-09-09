@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "yen-feedback",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "yen_feedback",
+      "database_name": "yen-feedback",
+      "database_id": "43062801-3cd5-4fc6-bc5e-2b87ef4d750e"
+    }
+  ]
+}

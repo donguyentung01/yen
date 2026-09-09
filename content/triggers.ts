@@ -176,6 +176,28 @@ export const COPY = {
     /** Shown instead when no single trigger leads yet. */
     noPatternYet: 'Chưa đủ để thấy thói quen gì đâu',
   },
+  /** Settings, which live at the bottom of Hành trình rather than in a tab. */
+  settings: {
+    heading: 'Khác',
+    feedbackRow: 'Góp ý',
+    feedbackRowHint: 'Nói gì cũng được',
+  },
+
+  feedback: {
+    title: 'Bạn muốn nói gì?',
+    /** Reassurance that this costs nothing and reveals nothing. */
+    subtitle: 'Không cần tên, không cần email. Gửi xong là xong.',
+    placeholder: 'Viết gì cũng được...',
+    send: 'Gửi',
+    sending: 'Đang gửi...',
+    sent: 'Cảm ơn bạn 🤍',
+    sentBody: 'Mình có đọc hết đó.',
+    failed: 'Gửi không được',
+    failedBody: 'Chắc mạng có vấn đề. Thử lại sau nha.',
+    retry: 'Thử lại',
+    closeA11y: 'Đóng',
+  },
+
   player: {
     /** Accessibility labels — spoken, never displayed. */
     playA11y: 'Phát',

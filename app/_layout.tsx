@@ -45,6 +45,10 @@ export default function RootLayout() {
             name="player/[id]"
             options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
           />
+          <Stack.Screen
+            name="feedback"
+            options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+          />
         </Stack>
         {/*
           Outside the Stack so it survives navigation — it hides itself on the
