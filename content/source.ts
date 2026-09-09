@@ -82,6 +82,26 @@ function hash(text: string): number {
 }
 
 /**
+ * Development escape hatch: pin every section to one index in its pool.
+ *
+ *   EXPO_PUBLIC_PIN_ROTATION=0 npx expo start
+ *
+ * Without this, auditioning newly added audio is close to impossible. Sections
+ * sit at different offsets in their pools, so the three `-01` files of a trigger
+ * never surface on the same day — you would have to wait for the right date, per
+ * section, to hear a set together. Pinning to 0 shows the `-01` of every
+ * section, which is the order recordings actually get produced in.
+ *
+ * Unset in normal runs, so the daily rotation is untouched in production.
+ */
+const PINNED_INDEX: number | null = (() => {
+  const raw = process.env.EXPO_PUBLIC_PIN_ROTATION;
+  if (raw == null || raw === '') return null;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+})();
+
+/**
  * Today's pick from one section's pool.
  *
  * The pool advances by one each day. The per-section offset means the three
@@ -90,6 +110,7 @@ function hash(text: string): number {
  */
 function pickForToday(pool: Piece[], trigger: string, type: ContentType): Piece | undefined {
   if (pool.length === 0) return undefined;
+  if (PINNED_INDEX !== null) return pool[PINNED_INDEX % pool.length];
   const offset = hash(`${trigger}:${type}`);
   return pool[(dayNumber() + offset) % pool.length];
 }

@@ -247,7 +247,7 @@
       "trigger": "that-tinh",
       "type": "breathing",
       "title": "Thở đi đã, khóc xíu cũng đc",
-      "durationSec": 300,
+      "durationSec": 95,
       "path": "that-tinh/breathing/tho-01.m4a"
     },
     {
@@ -287,7 +287,7 @@
       "trigger": "that-tinh",
       "type": "meditation",
       "title": "Ngủ một giấc, mai tính",
-      "durationSec": 600,
+      "durationSec": 180,
       "path": "that-tinh/meditation/thien-01.m4a"
     },
     {
@@ -327,7 +327,7 @@
       "trigger": "that-tinh",
       "type": "story",
       "title": "Chuyện của một người đi xa",
-      "durationSec": 1200,
+      "durationSec": 307,
       "path": "that-tinh/story/truyen-01.m4a"
     },
     {
