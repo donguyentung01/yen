@@ -31,11 +31,11 @@ Grid order is the order below.
 | Bắt đầu ngày mới ☀️ | Before school / work | Aqua | Thở · Thiền |
 | Hàng ngày 🙂 | Nothing special today | Green | Thở · Thiền · Truyện |
 
-**No fallback tile and no SOS entry.** Earlier drafts had a "Khum biết nữa" browse-freely tile, but "Hàng ngày" covers the same need and two doors to the same room is worse than one. An SOS entry was considered and is deliberately out of scope — if it ever returns it needs real, verified Vietnamese crisis-line numbers, which is a sourcing job, not a coding one.
+**No fallback tile and no SOS entry.** Earlier drafts had a "Khum biết nữa" browse-freely tile, but "Hàng ngày" covers the same need and two doors to the same room is worse than one. An SOS entry was considered and is deliberately out of scope — if it ever returns it needs real, verified Vietnamese crisis-line numbers, which is a sourcing job, not a coding one. **It stops being optional the moment there is a free-text input** — see the AI section below.
 
 **Superseded triggers:** "Ngộp deadline" and "Cạn pin" collapsed into **Stress** (they always overlapped). "Áp lực" was broadened from family-specific to work/life and renamed **Stress**. "Cô đơn" was dropped — its content was mostly "alone at night, can't sleep," which **Khó ngủ** absorbs.
 
-**Important:** slang labels (toang, cạn pin, etc.) will age out in 6–12 months. Keep this copy in a separate config/CMS layer, not hardcoded in UI, so it can be refreshed without a full app update.
+**Important:** slang labels (toang, cạn pin, etc.) will age out in 6–12 months. Keep this copy in a separate config layer, not hardcoded in UI. Half done: every user-facing string lives in `content/triggers.ts` and no Vietnamese string literal appears in any component — but that file is still *bundled*, so refreshing slang currently needs a new build. See tech notes for the two ways to close that gap.
 
 ## Content strategy
 
@@ -82,14 +82,46 @@ Slow pacing, short lines like real lullabies. Vietnamese-specific imagery (cánh
 - Regional/rural imagery over generic Western wellness imagery
 - Don't reproduce actual ca dao/folk poems verbatim — write original content in that spirit to avoid copyright issues
 
-## Gamification
+## Gamification / progress
 
-- Streak system, but with monthly "freeze" passes (Duolingo-style) — punishing absence contradicts a mindfulness app's purpose
-- Consider lunar-calendar-based streaks ("chuỗi ngày rằm") instead of pure daily count — culturally distinct, less punishing
-- Avoid leaderboards/social comparison — runs counter to the product's purpose
-- Badges tied to real behavior/reason for use ("Người thức khuya," "Vượt kỳ thi") rather than raw session count
-- Personal journey map metaphor over competitive ranking
-- Progress framed as cumulative minutes (Headspace-style), not raw streak count, to reduce pressure
+**The governing rule, and it decides everything else: every number shown to the
+user can only go up.**
+
+This app is opened by people who are falling apart. A metric that can *decrease*
+is a metric that can deliver bad news — and telling someone who was too low to
+open the app for a week that they lost a 12-day streak is the single most
+damaging thing the product could do. That principle is applied to every element,
+not just streaks.
+
+Built:
+- **Cumulative minutes** as the headline. It's true whether you listened last
+  night or last month, and it can never report a failure.
+- **Total days used, not a consecutive-day streak.** Shown in the home pill and
+  on Hành trình, and it never resets.
+- **Which trigger you come back to most.** The most personal thing on the
+  screen — self-knowledge rather than a compliance score — and doubles as the
+  instrumentation the Simple Habit takeaway below calls for. Held back until one
+  trigger clearly leads; claiming a pattern from a tie would be inventing
+  something about someone's inner life.
+
+**Superseded:** earlier drafts specced a Duolingo-style streak with monthly
+"freeze" passes, and floated lunar-calendar streaks ("chuỗi ngày rằm"). Freezes
+soften a breakable streak but don't remove the failure moment — they ration it.
+Making the count unbreakable is both simpler to build and kinder, so there are
+no freezes.
+
+**Also deliberately absent: a calendar heatmap.** It's the obvious "journey map"
+visual, but every blank square is a night someone didn't cope well enough to
+open an app.
+
+Still unbuilt, still wanted:
+- Badges tied to real behavior/reason for use ("Người thức khuya," "Vượt kỳ
+  thi") rather than raw session count
+- Time-of-day pattern ("hầu hết bạn nghe lúc 1–3 giờ sáng") — specific to this
+  product, quietly revealing, not a judgement
+- The piece you keep returning to
+
+Never: leaderboards or social comparison — runs counter to the product's purpose.
 
 ## Monetization
 
@@ -109,11 +141,20 @@ Founded 2016 by Yunha Kim, bootstrapped, soft-launched beta ~3 months after star
 
 - Stack as built: **React Native + Expo SDK 57** (managed workflow), TypeScript, `expo-router` for file-based routing. Expo Go for fast local testing, EAS Build when ready for actual App Store/Play Store builds. `react-native-web` is configured so the app also runs in a browser, which is the only option on a machine with no Xcode.
 - Audio playback: **`expo-audio`**, not `expo-av`. An earlier note here called expo-audio "currently in beta" — that is out of date; it now ships in lockstep with the SDK and `expo-av` is the legacy path. Background playback is configured (`shouldPlayInBackground`, iOS `UIBackgroundModes: audio`), needed since sleep content should keep playing after the screen locks.
-- **Audio storage: remote, not bundled in the app binary.** Host audio files in object storage behind a CDN — **Cloudflare R2** recommended (no egress fees, unlike S3). Since everything is free with no auth needed, this can just be a public-read bucket.
-- App ships with just a JSON manifest (filename/URL → display title, duration, trigger, content type) — tiny, no audio bundled at install time. Audio streams/downloads on first play, then caches locally via `expo-file-system` so repeat listens don't re-download.
-- This keeps the initial app install small regardless of how much audio content grows, and means new clips can be added post-launch by just uploading to the bucket + updating the manifest — no app store resubmission needed.
-- Compress audio to AAC/MP3 at a modest bitrate (64–96kbps mono is enough for voice content) to keep both storage and download-per-clip small.
-- Local storage (on-device, e.g. AsyncStorage or SQLite): just for streaks/progress — the audio itself lives remotely, not here.
+- **Audio storage: Cloudflare R2, live.** Bucket `yen-audio`, served from an `r2.dev` public URL. R2 over S3 for the zero egress fees, which is the cost that matters for an audio app. Nothing is bundled in the app binary.
+- **The manifest is served from R2 too, not just the audio.** That is what makes titles, durations and whole new pieces editable in production: change `manifest.json`, upload it, and every user sees it on next launch with no app store round trip. The copy bundled at build time stays as the offline fallback.
+- **Adding audio needs no app update.** Upload the file, add a manifest entry, done — verified by adding a piece to the bucket alone and watching the app pick it up. What *does* need a new build is anything in `triggers.ts`: trigger labels, intro copy, section makeup. So the slang is still not refreshable over the air; closing that gap means moving that copy into the manifest too, or setting up EAS Update.
+- Compress audio to AAC/m4a at a modest bitrate (64–96kbps mono is enough for voice) to keep storage and per-clip download small.
+- **Before real users:** `r2.dev` is rate-limited and has no CDN caching or access controls. It needs a custom domain, at which point set a short `max-age` on `manifest.json` so edits appear, and a long immutable one on the audio. Never overwrite an audio file in place once cached that way — bump the filename instead.
+- Local storage (AsyncStorage): listening history only — total seconds, days used, per-trigger counts. Local to the device, never sent anywhere.
+- **On-device audio caching is not built yet.** Every play currently re-downloads. Free on the R2 side, but it costs the user's mobile data — an 18MB story re-fetched per listen. `expo-file-system` with LRU eviction, opportunistic on wifi, is the intended shape.
+
+### Backend: one Cloudflare Worker
+
+- `worker/` is a small Worker exposing `POST /feedback`, writing to a **D1** database (SQLite). Deployed at `yen-feedback.donguyentung2001.workers.dev`.
+- **The Worker exists because the app can't talk to D1 directly** — and shouldn't. A database credential shipped in a mobile bundle is a credential anyone can extract. The Worker is the trust boundary: it decides what an untrusted client may do, which today is exactly one thing — append one feedback row, max 2000 chars. The credential never leaves Cloudflare, via a binding in `wrangler.jsonc` rather than a connection string.
+- Queries use `prepare()` + `bind()`. The message is arbitrary text from strangers; parameterisation is the difference between a feedback endpoint and a public write handle on the database.
+- Cost: R2, Workers and D1 are all inside free tiers by orders of magnitude at this scale, and the free plans throttle rather than bill, so there is no surprise-invoice path unless someone deliberately upgrades.
 
 ### Audio production pipeline (manual, not the coding agent's job)
 - **Breathing & meditation scripts**: voice generated by you separately via ElevenLabs (or similar TTS), using the scripts drafted in this doc as source text. Not something the coding agent needs to touch.
@@ -136,6 +177,8 @@ Founded 2016 by Yunha Kim, bootstrapped, soft-launched beta ~3 months after star
   ```
   Plus a matching JSON manifest (path → display title, duration, section) so the app can list and rotate files by just reading the manifest — new clips get uploaded to the right folder and added to the manifest, no code change needed.
 - **Content target: 5 pieces per section**, which is **70 files total** given that Bắt đầu ngày mới has no story. Roughly 17 hours of finished audio; the 20 stories at 20–30 minutes each are by far the largest share and are the realistic bottleneck on shipping.
+- **Placeholders**: `assets/audio/` is a staging directory for uploads, pre-filled with synthesized 12-second tones so every manifest entry has a file. Generated rather than sourced, because ambient audio pulled off YouTube isn't licensed for redistribution inside an app.
+- **Adding a real recording**: convert to m4a at 96kbps mono, drop it at the path the manifest already names, run `npm run audio -- --fix-durations`, then upload. Edit the `title` to match what was actually recorded — the filename never needs to change.
 
 ## UI/UX design decisions
 
@@ -151,8 +194,9 @@ Founded 2016 by Yunha Kim, bootstrapped, soft-launched beta ~3 months after star
 **1. Home / emotion picker (primary entry point)**
 - Header: small logo mark + greeting ("Ê, nay sao rồi?") + streak shown as a pill badge (flame icon, top-right), Duolingo/Snapchat-style — not buried in a stats tab
 - 2-column grid of five trigger tiles, each with: icon, genz label + emoji, one-line context subtitle, own tint background (per table above). The fifth sits alone on the last row at half width.
-- Below that: horizontally-scrolling row of quick-play items ("nghe gì đây ta") — Spotify/TikTok-style horizontal cards, each with icon, title, duration. These are one piece per section, each drawn from a *different* trigger so the row never just duplicates a tile below it.
-- Bottom nav: home / stats(chart) / profile — 3 tabs
+- **The grid is the whole screen.** An earlier draft had a horizontally-scrolling "nghe gì đây ta" row of quick-play suggestions underneath. It was removed: it offered a second, competing way in — browse by suggestion rather than by feeling — which undercuts the one decision this screen is meant to ask for.
+- The streak pill shows **total days used**, not a consecutive streak, and hides entirely at zero rather than greeting a new user with "0 ngày".
+- Bottom nav: **2 tabs — Trang chủ / Hành trình.** A third "Cá nhân" tab was removed; it promised an account the app doesn't have. Settings live at the bottom of Hành trình instead.
 
 **2. Trigger detail / playlist screen (e.g. "Thất tình")**
 - Back arrow + trigger label as header (not a generic "Content" title)
@@ -164,14 +208,116 @@ Founded 2016 by Yunha Kim, bootstrapped, soft-launched beta ~3 months after star
 **3. Player (not part of the original mockups — designed during implementation)**
 - Full-screen modal in the piece's section tint: large icon, title, section + duration, scrubber with elapsed/remaining, play/pause. Chevron-down to dismiss.
 - Starts playing on open — tapping the card was already the decision to listen, so a second tap would be a wasted step
+- **The chevron minimises, it does not stop.** Audio survives dismissal and collapses into a MiniPlayer bar; tapping the bar reopens the player mid-playback. That is what the gesture means in every app the audience already uses, and it matters here: someone puts on a 25-minute story to fall asleep, glances at the home screen, and losing it would be the app failing at the exact moment it's meant to help. Playback therefore lives above the navigator, not inside the screen.
 - **No autoplay into a next track, and no "session complete!" moment.** The content is written not to resolve, and a sleep piece finishing should never be the thing that wakes someone up.
 - The listed duration (e.g. "15 phút") is the *intended* length of the finished recording, used so lists can render without loading audio. The player shows the real duration of whatever loaded — those disagree while placeholder clips stand in.
+
+**4. MiniPlayer (collapsed player)**
+- Persistent bar above the tab bar: section icon, title, play/pause, hairline progress. Appears once something is loaded, hides on the player screen itself.
+- Play/pause is a sibling control, not nested inside the tap target, so pausing doesn't also reopen the player.
+
+**5. Hành trình (progress)**
+- Named for the doc's own journey-map metaphor. Explicitly *not* "Thống kê" — that's the clinical dashboard register the copy rules ban.
+- Headline is cumulative minutes; then total days used; then the trigger you come back to most. See Gamification above for why every number can only go up.
+- Empty until there's history, and says so plainly rather than showing invented zeros.
+- **Settings live at the bottom of this screen**, under "Khác" — and stay reachable in the empty state, since a brand-new user has no history but is exactly the person most likely to have something to say.
+
+**6. Feedback (modal)**
+- Free-text box, anonymous, posts to the Worker. The screen says "Không cần tên, không cần email" because a blank box with no explanation invites the question of who's reading.
+- In-app rather than a `mailto:` or a link out: email is close to dead for this audience, and most people abandon at a hand-off.
+- Failure shows a retry rather than pretending it sent.
 
 ### Copy/tone rules (enforced across all UI text, not just meditation scripts)
 - First person casual, genz-native slang where natural — not translated English idioms ("toang," "cạn pin," "ẻm," "khum" instead of stiff formal Vietnamese)
 - No corporate/clinical wellness-app language ("mindfulness journey," "self-care routine")
 - Never promise a fix — acknowledge, offer something small and doable right now
 - Keep slang copy in an editable config, not hardcoded — it will need refreshing as slang shifts
+
+## Future direction — AI (explored, not built)
+
+Sketched in discussion, recorded so the reasoning isn't lost. Nothing here is
+in scope for the prototype.
+
+**The idea:** a free-text box — user types "tôi thấy buồn" instead of tapping a
+tile — and the app responds with something suited to it.
+
+### Use AI for routing, not generation
+
+The tempting version is generating a breathing exercise on the fly: an LLM
+writes a Vietnamese script, TTS voices it, the app plays it. Technically
+straightforward, and with a *streaming* TTS API the latency is even workable —
+playback starts on the first line while the rest generates. Breathing content
+suits this unusually well, since it's mostly silence and slow speech, so the
+audio's own pacing leaves plenty of headroom to generate ahead.
+
+The economics split hard across the three sections, though. A breathing script
+is a few hundred characters of text, so cents per generation. A 25-minute story
+is ~20,000 characters — dollars *per listen*. Generating stories on demand is
+not viable and won't be soon.
+
+**The better shape: the model picks an existing piece and writes the intro line
+for it.** Same personalisation, full control over what's actually spoken, close
+to free, and fast. Generated audio also gets no human QC pass, which matters
+when the voice rules above are this specific — every generation is a fresh
+chance to say "bạn sẽ ổn thôi" to someone at their lowest.
+
+### A free-text box requires crisis handling first
+
+This is the blocker, and it's a content problem rather than an engineering one.
+
+Today the app has five buttons, so a user *cannot* disclose a crisis to it. Add
+a prompt field and eventually someone types "tôi muốn chết" — at which point an
+unsupervised model is improvising a breathing exercise in response to a suicide
+disclosure. At any real scale that's a certainty, not an edge case.
+
+So the **SOS entry stops being optional**. It was dropped as out of scope (see
+the trigger section), but free-text input makes it a prerequisite: crisis
+detection would have to run *before* routing, and route to real, verified
+Vietnamese crisis-line numbers.
+
+### No RAG needed
+
+Worth stating plainly, since it's the reflex answer. The whole catalog — 70
+pieces of id, title, trigger, section, duration — is roughly 4KB, about 1,500
+tokens. It fits in a prompt with room to spare, and would still fit at ten
+times the content. RAG earns its complexity in the tens of thousands of
+documents; this is three orders of magnitude short of that.
+
+The "retrieval" already exists: `manifest.json` in R2, fetched by a Worker.
+
+### What it would actually take
+
+One more Worker route alongside `/feedback`, same shape:
+
+```
+POST /route  { "text": "tôi thấy buồn" }
+   → crisis check (first, and separately)
+   → model: catalog + voice rules + user text
+   → { pieceIds: [...], intro: "..." }
+```
+
+- **Structured output**, so the model returns a piece id from a constrained set
+  rather than prose to be parsed.
+- **Validate the id against the manifest regardless** — models invent
+  plausible-looking ids. Fall back to the trigger grid instead of playing
+  nothing.
+- **Cache on a normalised prompt.** "buồn quá" and "i feel sad" should resolve
+  to the same handful of pieces; most requests then never reach a model, which
+  is most of the cost and nearly all of the latency.
+- **The API key lives in the Worker** (`wrangler secret put`), never in the app
+  bundle — same trust-boundary argument as the database.
+
+**Try keyword matching first.** "buồn", "mất ngủ", "áp lực" map cleanly onto the
+five triggers with no model at all. The LLM earns its place on the long tail of
+phrasings nobody anticipated — worth measuring how big that tail is before
+paying for inference on every request.
+
+### The honest counter-argument
+
+The trigger grid exists *because* the doc argues people in distress don't want
+to articulate — they want to tap. Typing "tôi thấy buồn" is more cognitive work
+than pressing Khó ngủ. So a prompt box may well be worse for the core case, and
+valuable mainly for what the five tiles don't cover.
 
 ## Where this lives in the code
 
@@ -181,9 +327,26 @@ The app now implements the above. Mapping the concepts to files:
 |---|---|
 | Triggers, sections per trigger, **all Vietnamese copy** | `content/triggers.ts` |
 | Audio catalog — titles, durations, bucket paths | `content/manifest.json` |
-| Daily rotation, and the single swap point for R2 | `content/source.ts` |
+| Daily rotation, R2 fetch + offline fallback | `content/source.ts` |
+| Playback that outlives the screen | `playback/PlaybackProvider.tsx` |
+| Listening history (local only) | `progress/store.ts`, `progress/ProgressProvider.tsx` |
+| Feedback client | `feedback/submit.ts` |
+| Feedback API + D1 schema | `worker/` |
 | Colors, type scale, radii | `theme/tokens.ts` |
-| Home / playlist / player screens | `app/` |
+| Screens, routed by file name | `app/` |
+
+Scripts:
+
+| Command | Does |
+|---|---|
+| `npm run audio` | Fills gaps in `assets/audio/` with placeholder tones. **Never overwrites real recordings.** |
+| `npm run audio -- --fix-durations` | Writes real file lengths into the manifest |
+| `npm run r2:upload` | Pushes audio + manifest to R2. `--manifest-only` for a title edit, `--only <trigger>` for one trigger |
+| `EXPO_PUBLIC_PIN_ROTATION=0 npx expo start` | Pins every section to index 0, so newly added `-01` files can be auditioned together |
+
+That last one exists because of a real trap: sections sit at different offsets
+in their pools, so a trigger's three `-01` files *never* surface on the same day.
+Without the pin, a freshly recorded set is unauditionable as a set.
 
 **The rule that keeps slang refreshable:** no Vietnamese string literal appears in any component — every word the UI says lives in `content/triggers.ts` or `content/manifest.json`. This is what makes a slang refresh a config edit rather than a code change, and it's the thing to check in review.
 
