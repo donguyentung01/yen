@@ -1,0 +1,566 @@
+{
+  "version": 3,
+  "comment": "Audio catalog. 5 triggers; sections vary per trigger (see `sections` in triggers.ts) with 5 pieces each. Each section surfaces one piece per day, rotated by date (see source.ts). `path` mirrors the R2 bucket layout <trigger>/<section>/<file> so uploads drop straight in. `durationSec` is the intended length of the finished recording and drives list display; the player reports the real loaded duration. Placeholder clips are much shorter than these numbers until real audio is produced.",
+  "pieces": [
+    {
+      "id": "kho-ngu-tho-01",
+      "trigger": "kho-ngu",
+      "type": "breathing",
+      "title": "Thở cho dịu lại rồi ngủ",
+      "durationSec": 300,
+      "path": "kho-ngu/breathing/tho-01.m4a"
+    },
+    {
+      "id": "kho-ngu-tho-02",
+      "trigger": "kho-ngu",
+      "type": "breathing",
+      "title": "Nằm yên, thở chậm",
+      "durationSec": 300,
+      "path": "kho-ngu/breathing/tho-02.m4a"
+    },
+    {
+      "id": "kho-ngu-tho-03",
+      "trigger": "kho-ngu",
+      "type": "breathing",
+      "title": "Đếm hơi thở thay vì đếm cừu",
+      "durationSec": 300,
+      "path": "kho-ngu/breathing/tho-03.m4a"
+    },
+    {
+      "id": "kho-ngu-tho-04",
+      "trigger": "kho-ngu",
+      "type": "breathing",
+      "title": "Thở dài ra, thả người xuống",
+      "durationSec": 300,
+      "path": "kho-ngu/breathing/tho-04.m4a"
+    },
+    {
+      "id": "kho-ngu-tho-05",
+      "trigger": "kho-ngu",
+      "type": "breathing",
+      "title": "Không ngủ được cũng không sao",
+      "durationSec": 300,
+      "path": "kho-ngu/breathing/tho-05.m4a"
+    },
+    {
+      "id": "kho-ngu-thien-01",
+      "trigger": "kho-ngu",
+      "type": "meditation",
+      "title": "Nằm im, đầu óc tự lắng",
+      "durationSec": 600,
+      "path": "kho-ngu/meditation/thien-01.m4a"
+    },
+    {
+      "id": "kho-ngu-thien-02",
+      "trigger": "kho-ngu",
+      "type": "meditation",
+      "title": "Thả lỏng từ đầu tới chân",
+      "durationSec": 720,
+      "path": "kho-ngu/meditation/thien-02.m4a"
+    },
+    {
+      "id": "kho-ngu-thien-03",
+      "trigger": "kho-ngu",
+      "type": "meditation",
+      "title": "Tắt não giùm cái",
+      "durationSec": 900,
+      "path": "kho-ngu/meditation/thien-03.m4a"
+    },
+    {
+      "id": "kho-ngu-thien-04",
+      "trigger": "kho-ngu",
+      "type": "meditation",
+      "title": "Đêm nay không cần nghĩ nữa",
+      "durationSec": 1080,
+      "path": "kho-ngu/meditation/thien-04.m4a"
+    },
+    {
+      "id": "kho-ngu-thien-05",
+      "trigger": "kho-ngu",
+      "type": "meditation",
+      "title": "Ngủ hồi nào không hay",
+      "durationSec": 1200,
+      "path": "kho-ngu/meditation/thien-05.m4a"
+    },
+    {
+      "id": "kho-ngu-truyen-01",
+      "trigger": "kho-ngu",
+      "type": "story",
+      "title": "Chuyến tàu đêm về miền Tây",
+      "durationSec": 1200,
+      "path": "kho-ngu/story/truyen-01.m4a"
+    },
+    {
+      "id": "kho-ngu-truyen-02",
+      "trigger": "kho-ngu",
+      "type": "story",
+      "title": "Ngôi nhà bên bờ sông",
+      "durationSec": 1380,
+      "path": "kho-ngu/story/truyen-02.m4a"
+    },
+    {
+      "id": "kho-ngu-truyen-03",
+      "trigger": "kho-ngu",
+      "type": "story",
+      "title": "Người coi vườn ban đêm",
+      "durationSec": 1500,
+      "path": "kho-ngu/story/truyen-03.m4a"
+    },
+    {
+      "id": "kho-ngu-truyen-04",
+      "trigger": "kho-ngu",
+      "type": "story",
+      "title": "Đêm ở một quán trọ ven đường",
+      "durationSec": 1680,
+      "path": "kho-ngu/story/truyen-04.m4a"
+    },
+    {
+      "id": "kho-ngu-truyen-05",
+      "trigger": "kho-ngu",
+      "type": "story",
+      "title": "Tiếng chuông chùa lúc ba giờ sáng",
+      "durationSec": 1800,
+      "path": "kho-ngu/story/truyen-05.m4a"
+    },
+    {
+      "id": "stress-tho-01",
+      "trigger": "stress",
+      "type": "breathing",
+      "title": "Thở cho nhẹ đầu",
+      "durationSec": 300,
+      "path": "stress/breathing/tho-01.m4a"
+    },
+    {
+      "id": "stress-tho-02",
+      "trigger": "stress",
+      "type": "breathing",
+      "title": "Đặt xuống năm phút",
+      "durationSec": 300,
+      "path": "stress/breathing/tho-02.m4a"
+    },
+    {
+      "id": "stress-tho-03",
+      "trigger": "stress",
+      "type": "breathing",
+      "title": "Vai đang gồng kìa, thả ra",
+      "durationSec": 300,
+      "path": "stress/breathing/tho-03.m4a"
+    },
+    {
+      "id": "stress-tho-04",
+      "trigger": "stress",
+      "type": "breathing",
+      "title": "Thở trước, lo sau",
+      "durationSec": 300,
+      "path": "stress/breathing/tho-04.m4a"
+    },
+    {
+      "id": "stress-tho-05",
+      "trigger": "stress",
+      "type": "breathing",
+      "title": "Năm phút này không giải quyết gì đâu",
+      "durationSec": 300,
+      "path": "stress/breathing/tho-05.m4a"
+    },
+    {
+      "id": "stress-thien-01",
+      "trigger": "stress",
+      "type": "meditation",
+      "title": "Không ai chấm điểm bạn tối nay",
+      "durationSec": 600,
+      "path": "stress/meditation/thien-01.m4a"
+    },
+    {
+      "id": "stress-thien-02",
+      "trigger": "stress",
+      "type": "meditation",
+      "title": "Việc vẫn đó, mai làm",
+      "durationSec": 720,
+      "path": "stress/meditation/thien-02.m4a"
+    },
+    {
+      "id": "stress-thien-03",
+      "trigger": "stress",
+      "type": "meditation",
+      "title": "Bỏ bớt xuống một chút",
+      "durationSec": 900,
+      "path": "stress/meditation/thien-03.m4a"
+    },
+    {
+      "id": "stress-thien-04",
+      "trigger": "stress",
+      "type": "meditation",
+      "title": "Không cần giỏi lúc này",
+      "durationSec": 1080,
+      "path": "stress/meditation/thien-04.m4a"
+    },
+    {
+      "id": "stress-thien-05",
+      "trigger": "stress",
+      "type": "meditation",
+      "title": "Nghỉ không phải là bỏ cuộc",
+      "durationSec": 1200,
+      "path": "stress/meditation/thien-05.m4a"
+    },
+    {
+      "id": "stress-truyen-01",
+      "trigger": "stress",
+      "type": "story",
+      "title": "Người thợ sửa xe cuối đường",
+      "durationSec": 1200,
+      "path": "stress/story/truyen-01.m4a"
+    },
+    {
+      "id": "stress-truyen-02",
+      "trigger": "stress",
+      "type": "story",
+      "title": "Chuyện người trồng rau bên sông",
+      "durationSec": 1380,
+      "path": "stress/story/truyen-02.m4a"
+    },
+    {
+      "id": "stress-truyen-03",
+      "trigger": "stress",
+      "type": "story",
+      "title": "Cái quán không bao giờ đông",
+      "durationSec": 1500,
+      "path": "stress/story/truyen-03.m4a"
+    },
+    {
+      "id": "stress-truyen-04",
+      "trigger": "stress",
+      "type": "story",
+      "title": "Người đàn bà đan len",
+      "durationSec": 1680,
+      "path": "stress/story/truyen-04.m4a"
+    },
+    {
+      "id": "stress-truyen-05",
+      "trigger": "stress",
+      "type": "story",
+      "title": "Chuyến đò cuối ngày",
+      "durationSec": 1800,
+      "path": "stress/story/truyen-05.m4a"
+    },
+    {
+      "id": "that-tinh-tho-01",
+      "trigger": "that-tinh",
+      "type": "breathing",
+      "title": "Thở đi đã, khóc xíu cũng đc",
+      "durationSec": 300,
+      "path": "that-tinh/breathing/tho-01.m4a"
+    },
+    {
+      "id": "that-tinh-tho-02",
+      "trigger": "that-tinh",
+      "type": "breathing",
+      "title": "Không cần nín, cứ thở thôi",
+      "durationSec": 300,
+      "path": "that-tinh/breathing/tho-02.m4a"
+    },
+    {
+      "id": "that-tinh-tho-03",
+      "trigger": "that-tinh",
+      "type": "breathing",
+      "title": "Bốn nhịp vào, sáu nhịp ra",
+      "durationSec": 300,
+      "path": "that-tinh/breathing/tho-03.m4a"
+    },
+    {
+      "id": "that-tinh-tho-04",
+      "trigger": "that-tinh",
+      "type": "breathing",
+      "title": "Ngực nặng thì thở chậm lại",
+      "durationSec": 300,
+      "path": "that-tinh/breathing/tho-04.m4a"
+    },
+    {
+      "id": "that-tinh-tho-05",
+      "trigger": "that-tinh",
+      "type": "breathing",
+      "title": "Thở cho qua lúc này",
+      "durationSec": 300,
+      "path": "that-tinh/breathing/tho-05.m4a"
+    },
+    {
+      "id": "that-tinh-thien-01",
+      "trigger": "that-tinh",
+      "type": "meditation",
+      "title": "Ngủ một giấc, mai tính",
+      "durationSec": 600,
+      "path": "that-tinh/meditation/thien-01.m4a"
+    },
+    {
+      "id": "that-tinh-thien-02",
+      "trigger": "that-tinh",
+      "type": "meditation",
+      "title": "Không cần hiểu tại sao ngay tối nay",
+      "durationSec": 720,
+      "path": "that-tinh/meditation/thien-02.m4a"
+    },
+    {
+      "id": "that-tinh-thien-03",
+      "trigger": "that-tinh",
+      "type": "meditation",
+      "title": "Để yên chỗ đau đó một lát",
+      "durationSec": 900,
+      "path": "that-tinh/meditation/thien-03.m4a"
+    },
+    {
+      "id": "that-tinh-thien-04",
+      "trigger": "that-tinh",
+      "type": "meditation",
+      "title": "Nhớ thì cứ nhớ",
+      "durationSec": 1080,
+      "path": "that-tinh/meditation/thien-04.m4a"
+    },
+    {
+      "id": "that-tinh-thien-05",
+      "trigger": "that-tinh",
+      "type": "meditation",
+      "title": "Tối nay mình không sửa gì hết",
+      "durationSec": 1200,
+      "path": "that-tinh/meditation/thien-05.m4a"
+    },
+    {
+      "id": "that-tinh-truyen-01",
+      "trigger": "that-tinh",
+      "type": "story",
+      "title": "Chuyện của một người đi xa",
+      "durationSec": 1200,
+      "path": "that-tinh/story/truyen-01.m4a"
+    },
+    {
+      "id": "that-tinh-truyen-02",
+      "trigger": "that-tinh",
+      "type": "story",
+      "title": "Căn phòng còn nguyên đồ đạc",
+      "durationSec": 1380,
+      "path": "that-tinh/story/truyen-02.m4a"
+    },
+    {
+      "id": "that-tinh-truyen-03",
+      "trigger": "that-tinh",
+      "type": "story",
+      "title": "Người ta ở lại bến xe",
+      "durationSec": 1500,
+      "path": "that-tinh/story/truyen-03.m4a"
+    },
+    {
+      "id": "that-tinh-truyen-04",
+      "trigger": "that-tinh",
+      "type": "story",
+      "title": "Mùa mưa năm đó",
+      "durationSec": 1680,
+      "path": "that-tinh/story/truyen-04.m4a"
+    },
+    {
+      "id": "that-tinh-truyen-05",
+      "trigger": "that-tinh",
+      "type": "story",
+      "title": "Lá thư không gửi",
+      "durationSec": 1800,
+      "path": "that-tinh/story/truyen-05.m4a"
+    },
+    {
+      "id": "khoi-dau-tho-01",
+      "trigger": "khoi-dau",
+      "type": "breathing",
+      "title": "Thở ba hơi trước khi ra khỏi giường",
+      "durationSec": 300,
+      "path": "khoi-dau/breathing/tho-01.m4a"
+    },
+    {
+      "id": "khoi-dau-tho-02",
+      "trigger": "khoi-dau",
+      "type": "breathing",
+      "title": "Hít vào cho tỉnh, thở ra cho nhẹ",
+      "durationSec": 300,
+      "path": "khoi-dau/breathing/tho-02.m4a"
+    },
+    {
+      "id": "khoi-dau-tho-03",
+      "trigger": "khoi-dau",
+      "type": "breathing",
+      "title": "Chưa cần dậy vội",
+      "durationSec": 300,
+      "path": "khoi-dau/breathing/tho-03.m4a"
+    },
+    {
+      "id": "khoi-dau-tho-04",
+      "trigger": "khoi-dau",
+      "type": "breathing",
+      "title": "Vài phút cho đầu óc mở mắt",
+      "durationSec": 300,
+      "path": "khoi-dau/breathing/tho-04.m4a"
+    },
+    {
+      "id": "khoi-dau-tho-05",
+      "trigger": "khoi-dau",
+      "type": "breathing",
+      "title": "Thở như lúc chưa lo gì hết",
+      "durationSec": 300,
+      "path": "khoi-dau/breathing/tho-05.m4a"
+    },
+    {
+      "id": "khoi-dau-thien-01",
+      "trigger": "khoi-dau",
+      "type": "meditation",
+      "title": "Sáng nay mình muốn thấy gì",
+      "durationSec": 600,
+      "path": "khoi-dau/meditation/thien-01.m4a"
+    },
+    {
+      "id": "khoi-dau-thien-02",
+      "trigger": "khoi-dau",
+      "type": "meditation",
+      "title": "Đi qua ngày hôm nay, nhẹ thôi",
+      "durationSec": 720,
+      "path": "khoi-dau/meditation/thien-02.m4a"
+    },
+    {
+      "id": "khoi-dau-thien-03",
+      "trigger": "khoi-dau",
+      "type": "meditation",
+      "title": "Chưa có gì xảy ra cả",
+      "durationSec": 900,
+      "path": "khoi-dau/meditation/thien-03.m4a"
+    },
+    {
+      "id": "khoi-dau-thien-04",
+      "trigger": "khoi-dau",
+      "type": "meditation",
+      "title": "Đặt điện thoại xuống mười lăm phút",
+      "durationSec": 1080,
+      "path": "khoi-dau/meditation/thien-04.m4a"
+    },
+    {
+      "id": "khoi-dau-thien-05",
+      "trigger": "khoi-dau",
+      "type": "meditation",
+      "title": "Bắt đầu lại, kiểu bình tĩnh",
+      "durationSec": 1200,
+      "path": "khoi-dau/meditation/thien-05.m4a"
+    },
+    {
+      "id": "hang-ngay-tho-01",
+      "trigger": "hang-ngay",
+      "type": "breathing",
+      "title": "Thở cho đều, vậy thôi",
+      "durationSec": 300,
+      "path": "hang-ngay/breathing/tho-01.m4a"
+    },
+    {
+      "id": "hang-ngay-tho-02",
+      "trigger": "hang-ngay",
+      "type": "breathing",
+      "title": "Năm phút không làm gì hết",
+      "durationSec": 300,
+      "path": "hang-ngay/breathing/tho-02.m4a"
+    },
+    {
+      "id": "hang-ngay-tho-03",
+      "trigger": "hang-ngay",
+      "type": "breathing",
+      "title": "Hít vào, thở ra, hết",
+      "durationSec": 300,
+      "path": "hang-ngay/breathing/tho-03.m4a"
+    },
+    {
+      "id": "hang-ngay-tho-04",
+      "trigger": "hang-ngay",
+      "type": "breathing",
+      "title": "Thở kiểu không có chuyện gì",
+      "durationSec": 300,
+      "path": "hang-ngay/breathing/tho-04.m4a"
+    },
+    {
+      "id": "hang-ngay-tho-05",
+      "trigger": "hang-ngay",
+      "type": "breathing",
+      "title": "Ngồi yên một chút",
+      "durationSec": 300,
+      "path": "hang-ngay/breathing/tho-05.m4a"
+    },
+    {
+      "id": "hang-ngay-thien-01",
+      "trigger": "hang-ngay",
+      "type": "meditation",
+      "title": "Một ngày bình thường",
+      "durationSec": 600,
+      "path": "hang-ngay/meditation/thien-01.m4a"
+    },
+    {
+      "id": "hang-ngay-thien-02",
+      "trigger": "hang-ngay",
+      "type": "meditation",
+      "title": "Không có gì để xử lý",
+      "durationSec": 720,
+      "path": "hang-ngay/meditation/thien-02.m4a"
+    },
+    {
+      "id": "hang-ngay-thien-03",
+      "trigger": "hang-ngay",
+      "type": "meditation",
+      "title": "Nghe cho đều, cho quen",
+      "durationSec": 900,
+      "path": "hang-ngay/meditation/thien-03.m4a"
+    },
+    {
+      "id": "hang-ngay-thien-04",
+      "trigger": "hang-ngay",
+      "type": "meditation",
+      "title": "Ngồi với chính mình xíu",
+      "durationSec": 1080,
+      "path": "hang-ngay/meditation/thien-04.m4a"
+    },
+    {
+      "id": "hang-ngay-thien-05",
+      "trigger": "hang-ngay",
+      "type": "meditation",
+      "title": "Nay không cần cố gắng",
+      "durationSec": 1200,
+      "path": "hang-ngay/meditation/thien-05.m4a"
+    },
+    {
+      "id": "hang-ngay-truyen-01",
+      "trigger": "hang-ngay",
+      "type": "story",
+      "title": "Buổi chiều không có gì xảy ra",
+      "durationSec": 1200,
+      "path": "hang-ngay/story/truyen-01.m4a"
+    },
+    {
+      "id": "hang-ngay-truyen-02",
+      "trigger": "hang-ngay",
+      "type": "story",
+      "title": "Chuyện cái cây trước nhà",
+      "durationSec": 1380,
+      "path": "hang-ngay/story/truyen-02.m4a"
+    },
+    {
+      "id": "hang-ngay-truyen-03",
+      "trigger": "hang-ngay",
+      "type": "story",
+      "title": "Người bán báo và con chó",
+      "durationSec": 1500,
+      "path": "hang-ngay/story/truyen-03.m4a"
+    },
+    {
+      "id": "hang-ngay-truyen-04",
+      "trigger": "hang-ngay",
+      "type": "story",
+      "title": "Ngày chủ nhật ở quê",
+      "durationSec": 1680,
+      "path": "hang-ngay/story/truyen-04.m4a"
+    },
+    {
+      "id": "hang-ngay-truyen-05",
+      "trigger": "hang-ngay",
+      "type": "story",
+      "title": "Chuyện hai người hàng xóm",
+      "durationSec": 1800,
+      "path": "hang-ngay/story/truyen-05.m4a"
+    }
+  ]
+}
