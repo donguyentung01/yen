@@ -5,6 +5,8 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { MiniPlayer } from '../components/MiniPlayer';
+import { PlaybackProvider } from '../playback/PlaybackProvider';
 import { color } from '../theme/tokens';
 
 export default function RootLayout() {
@@ -27,20 +29,27 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: color.surface0 },
-        }}
-      >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="trigger/[id]" />
-        <Stack.Screen
-          name="player/[id]"
-          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
-        />
-      </Stack>
+      <PlaybackProvider>
+        <StatusBar style="light" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: color.surface0 },
+          }}
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="trigger/[id]" />
+          <Stack.Screen
+            name="player/[id]"
+            options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+          />
+        </Stack>
+        {/*
+          Outside the Stack so it survives navigation — it hides itself on the
+          player screen and when nothing is loaded.
+        */}
+        <MiniPlayer />
+      </PlaybackProvider>
     </SafeAreaProvider>
   );
 }

@@ -174,6 +174,8 @@ export const COPY = {
     playA11y: 'Phát',
     pauseA11y: 'Tạm dừng',
     backA11y: 'Quay lại',
+    /** The chevron collapses the player rather than stopping it. */
+    minimizeA11y: 'Thu nhỏ',
     loading: 'Đang tải...',
   },
 

@@ -1,37 +1,52 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Slider from '@react-native-community/slider';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IconSquare } from '../../components/IconSquare';
+import { usePlayback } from '../../playback/PlaybackProvider';
 import { color, fontSize, radius, spacing, tint } from '../../theme/tokens';
 import { COPY, CONTENT_TYPES, formatContentMeta } from '../../content/triggers';
-import { getPiece, resolveAudioSource, type Piece } from '../../content/source';
+import { getPiece, type Piece } from '../../content/source';
 
 /**
- * The player.
+ * The expanded player.
  *
- * The design doc never mocked this screen, so it stays deliberately restrained:
- * what's playing, how far in, and a way to stop. Notably absent, and absent on
- * purpose — no autoplay into a next track, and no "session complete!" moment at
- * the end. The content is written to *not* resolve, and a sleep piece finishing
- * should never be the thing that wakes someone up.
+ * It renders shared playback state rather than owning a player, so dismissing
+ * it is a minimise, not a stop — the audio carries on and collapses into the
+ * MiniPlayer, which is what the down-chevron means in every app the audience
+ * already uses.
+ *
+ * Deliberately restrained: what's playing, how far in, and a way to pause. No
+ * autoplay into a next track and no "session complete" moment — the content is
+ * written not to resolve, and a sleep piece ending should never be the thing
+ * that wakes someone up.
  */
 export default function PlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [piece, setPiece] = useState<Piece | null>(null);
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const playback = usePlayback();
+  const [piece, setPiece] = useState<Piece | null>(
+    playback.piece?.id === id ? playback.piece : null
+  );
 
   useEffect(() => {
     let active = true;
-    getPiece(id).then((p) => {
-      if (active) setPiece(p ?? null);
+    getPiece(id).then((found) => {
+      if (!active || !found) return;
+      setPiece(found);
+      // Opening a piece that isn't the one loaded starts it; reopening the
+      // current one just shows it, mid-playback, where the listener left it.
+      playback.play(found);
     });
     return () => {
       active = false;
     };
+    // playback.play is stable; re-running on every status tick would restart audio.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   if (!piece) {
@@ -42,45 +57,14 @@ export default function PlayerScreen() {
     );
   }
 
-  // Split so useAudioPlayer is never called with an undefined source — given
-  // one, it builds a player with nothing to play and never picks the source up
-  // later. `key` gives each piece its own player instead of reusing one.
-  return <Player key={piece.id} piece={piece} />;
-}
-
-function Player({ piece }: { piece: Piece }) {
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
-
-  const player = useAudioPlayer(resolveAudioSource(piece), { updateInterval: 250 });
-  const status = useAudioPlayerStatus(player);
-
-  // Tapping the card was already the decision to listen, so playback starts on
-  // its own rather than asking for a second tap. Guarded by a ref so it fires
-  // once — otherwise pausing at 0:00 would immediately restart it.
-  const autoStarted = useRef(false);
-  useEffect(() => {
-    if (status.isLoaded && !autoStarted.current) {
-      autoStarted.current = true;
-      player.play();
-    }
-  }, [status.isLoaded, player]);
-
-  // Wind back to the start when a piece ends so play restarts it rather than
-  // sitting dead at the end.
-  useEffect(() => {
-    if (status.didJustFinish) {
-      player.seekTo(0);
-    }
-  }, [status.didJustFinish, player]);
-
   const type = CONTENT_TYPES[piece.type];
   const palette = tint[type.tint];
-
-  // The real loaded duration, not the manifest's. These differ while
-  // placeholder clips stand in for unproduced content.
-  const duration = status.duration || 0;
-  const position = Math.min(status.currentTime, duration || status.currentTime);
+  // Only trust the transport readout once this piece is the one loaded —
+  // otherwise the previous track's position flashes up for a frame.
+  const isCurrent = playback.piece?.id === piece.id;
+  const duration = isCurrent ? playback.duration : 0;
+  const position = isCurrent ? playback.position : 0;
+  const isLoaded = isCurrent && playback.isLoaded;
 
   return (
     <View
@@ -91,7 +75,7 @@ function Player({ piece }: { piece: Piece }) {
     >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={COPY.player.backA11y}
+        accessibilityLabel={COPY.player.minimizeA11y}
         onPress={() => router.back()}
         hitSlop={12}
         style={styles.close}
@@ -117,26 +101,26 @@ function Player({ piece }: { piece: Piece }) {
           minimumValue={0}
           maximumValue={duration || 1}
           value={position}
-          onSlidingComplete={(v) => player.seekTo(v)}
+          onSlidingComplete={playback.seekTo}
           minimumTrackTintColor={palette.fg}
           maximumTrackTintColor={color.border}
           thumbTintColor={palette.fg}
-          disabled={!status.isLoaded}
+          disabled={!isLoaded}
         />
         <View style={styles.timeRow}>
           <Text style={styles.time}>{formatClock(position)}</Text>
           <Text style={styles.time}>
-            {status.isLoaded ? formatClock(duration) : COPY.player.loading}
+            {isLoaded ? formatClock(duration) : COPY.player.loading}
           </Text>
         </View>
 
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={
-            status.playing ? COPY.player.pauseA11y : COPY.player.playA11y
+            playback.isPlaying ? COPY.player.pauseA11y : COPY.player.playA11y
           }
-          onPress={() => (status.playing ? player.pause() : player.play())}
-          disabled={!status.isLoaded}
+          onPress={playback.toggle}
+          disabled={!isLoaded}
           style={({ pressed }) => [
             styles.playButton,
             { backgroundColor: palette.bg },
@@ -144,7 +128,7 @@ function Player({ piece }: { piece: Piece }) {
           ]}
         >
           <MaterialCommunityIcons
-            name={status.playing ? 'pause' : 'play'}
+            name={playback.isPlaying ? 'pause' : 'play'}
             size={32}
             color={palette.fg}
           />
