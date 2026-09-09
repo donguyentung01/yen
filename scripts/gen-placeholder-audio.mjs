@@ -1,7 +1,21 @@
 #!/usr/bin/env node
 /**
- * Generates placeholder audio for every piece in content/manifest.json, plus
- * the content/localAudio.ts require-map that points at them.
+ * Two jobs, on different timelines.
+ *
+ * 1. **Write content/localAudio.ts** — the map of manifest path → bundled
+ *    asset. Metro resolves `require()` at build time and can't take a dynamic
+ *    string, so all 70 entries must be spelled out; deriving them from the
+ *    manifest beats maintaining them by hand. Needed until audio moves to R2.
+ *
+ * 2. **Fill in missing audio with synthesized placeholders** — a file named in
+ *    the manifest that doesn't exist on disk fails the *bundle*, not just
+ *    playback, so every path needs something at it. This job disappears as real
+ *    recordings arrive.
+ *
+ * **Existing files are never overwritten.** Real recordings cost days to
+ * produce, and this script used to clear the whole directory before
+ * regenerating — which would have destroyed them. Pass `--force` to regenerate
+ * everything anyway (only safe while it's all placeholders).
  *
  * Real content is produced manually (ElevenLabs for voice) and doesn't exist
  * yet. The design doc flags that grabbing audio off YouTube carries real
@@ -19,7 +33,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -35,7 +49,14 @@ const TAU = Math.PI * 2;
 
 const manifest = JSON.parse(readFileSync(join(ROOT, 'content', 'manifest.json'), 'utf8'));
 
-/** Deterministic PRNG so regenerating doesn't churn the files in git. */
+/**
+ * Deterministic PRNG, so a given piece always synthesizes to the same audio.
+ *
+ * Note this does *not* make regeneration byte-identical — afconvert stamps
+ * metadata into the m4a container, so `--force` will still show all 70 files as
+ * modified in git even though the audio is unchanged. Harmless, and the default
+ * path no longer rewrites anything.
+ */
 function makeRandom(seed) {
   let s = seed >>> 0;
   return () => {
@@ -175,12 +196,24 @@ if (!canCompress) {
   console.warn('afconvert not found — writing uncompressed .wav instead.');
 }
 
-// Clear previous output so renamed triggers don't leave orphans behind. Scoped
-// to the generated directory and nothing else.
-rmSync(OUT_DIR, { recursive: true, force: true });
+const force = process.argv.includes('--force');
+
+/** Actual length of a file on disk, or null if it can't be read. */
+function actualDuration(file) {
+  try {
+    const out = execFileSync('/usr/bin/afinfo', [file], { encoding: 'utf8' });
+    const m = out.match(/estimated duration: ([0-9.]+)/);
+    return m ? parseFloat(m[1]) : null;
+  } catch {
+    return null;
+  }
+}
 
 const n = SAMPLE_RATE * SECONDS;
 const entries = [];
+let generated = 0;
+let kept = 0;
+const durationWarnings = [];
 
 for (const piece of manifest.pieces) {
   const synth = SYNTH[piece.type];
@@ -191,8 +224,29 @@ for (const piece of manifest.pieces) {
 
   const relPath = canCompress ? piece.path : piece.path.replace(/\.m4a$/, '.wav');
   const target = join(OUT_DIR, relPath);
-  mkdirSync(dirname(target), { recursive: true });
+  entries.push({ key: piece.path, rel: relPath, trigger: piece.trigger });
 
+  // Never overwrite audio that already exists. Once real recordings start
+  // landing here, regenerating over them would destroy work that took days to
+  // produce — so filling gaps is the default and clobbering is opt-in.
+  if (existsSync(target) && !force) {
+    kept++;
+    const real = actualDuration(target);
+    // A file that isn't placeholder-length is a real recording. Check that the
+    // manifest agrees with it, since a stale durationSec shows the wrong time
+    // in every list in the app.
+    if (real !== null && Math.abs(real - SECONDS) > 0.5) {
+      const drift = Math.abs(real - piece.durationSec) / piece.durationSec;
+      if (drift > 0.1) {
+        durationWarnings.push(
+          `  ${piece.path}\n    manifest says ${piece.durationSec}s, file is ${Math.round(real)}s`
+        );
+      }
+    }
+    continue;
+  }
+
+  mkdirSync(dirname(target), { recursive: true });
   const samples = applyFades(synth(n, makeRandom(seedFrom(piece.id))));
   if (canCompress) {
     const tmp = `${target}.tmp.wav`;
@@ -202,9 +256,23 @@ for (const piece of manifest.pieces) {
   } else {
     writeFileSync(target, toWav(samples));
   }
-
-  entries.push({ key: piece.path, rel: relPath, trigger: piece.trigger });
+  generated++;
 }
+
+// Files on disk the manifest no longer references — left behind by a renamed
+// or removed trigger. Reported rather than deleted, because guessing wrong
+// about which audio is disposable is not a mistake worth risking.
+const expected = new Set(entries.map((e) => join(OUT_DIR, e.rel)));
+const orphans = [];
+function findOrphans(dir) {
+  if (!existsSync(dir)) return;
+  for (const item of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, item.name);
+    if (item.isDirectory()) findOrphans(full);
+    else if (!expected.has(full)) orphans.push(full);
+  }
+}
+findOrphans(OUT_DIR);
 
 // Metro resolves require() at build time and can't take a dynamic string, so
 // the map of manifest path → bundled asset has to be spelled out. Generating it
@@ -241,5 +309,23 @@ ${grouped.join('\n')}
 `
 );
 
-console.log(`Generated ${entries.length} placeholder clips (${SECONDS}s each) in assets/audio/`);
-console.log('Wrote content/localAudio.ts');
+console.log(`Wrote content/localAudio.ts (${entries.length} entries)`);
+console.log(
+  `Audio: ${generated} placeholder${generated === 1 ? '' : 's'} generated, ${kept} existing file${kept === 1 ? '' : 's'} left alone`
+);
+
+if (durationWarnings.length > 0) {
+  console.warn(
+    `\n${durationWarnings.length} file${durationWarnings.length === 1 ? ' disagrees' : 's disagree'} with the manifest — update durationSec, it drives what the app displays:`
+  );
+  console.warn(durationWarnings.join('\n'));
+}
+
+if (orphans.length > 0) {
+  console.warn(
+    `\n${orphans.length} file${orphans.length === 1 ? '' : 's'} in assets/audio/ not referenced by the manifest:`
+  );
+  for (const o of orphans.slice(0, 10)) console.warn(`  ${o.replace(ROOT + '/', '')}`);
+  if (orphans.length > 10) console.warn(`  ...and ${orphans.length - 10} more`);
+  console.warn('Delete them by hand if they are stale — this script will not.');
+}

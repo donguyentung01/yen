@@ -68,16 +68,42 @@ adding an entry — no code change, no app store resubmission.
 
 ## Audio
 
-Real content doesn't exist yet. Placeholder clips are synthesized locally:
-
 ```bash
-npm run audio      # regenerates assets/audio/ from the manifest
+npm run audio              # fill in any missing audio, refresh localAudio.ts
+npm run audio -- --force   # regenerate ALL placeholders, overwriting real files
 ```
 
-These are 30-second tones and filtered noise. They exist to prove playback
-works, nothing more. They're generated rather than borrowed because ambient
-tracks pulled off YouTube aren't licensed for redistribution inside an app —
-see the note in the design doc before shipping anything real.
+The script does two things. It writes `content/localAudio.ts` — the map Metro
+needs, since `require()` can't take a dynamic path — and it synthesizes
+placeholder clips for any manifest entry with no file on disk. That second part
+isn't cosmetic: a missing file fails the *bundle*, not just playback, so every
+path needs something at it.
+
+**It never overwrites existing audio.** Drop a real recording in and `npm run
+audio` will leave it alone and say so. Only `--force` clobbers, and once you
+have real recordings you almost certainly don't want it.
+
+It also warns when a file's real length disagrees with `durationSec` in the
+manifest, which is the easy thing to forget after swapping in a recording — that
+number is what every list in the app displays.
+
+Placeholders are 12-second tones, generated rather than borrowed because ambient
+audio pulled off YouTube isn't licensed for redistribution inside an app.
+
+### Adding real audio
+
+Convert to m4a and drop it at the path the manifest already names:
+
+```bash
+afconvert -f m4af -d aac -b 96000 input.mp3 assets/audio/kho-ngu/story/truyen-01.m4a
+```
+
+Then update `durationSec` in `content/manifest.json`. Nothing else — the
+require-map already points there.
+
+Bundling stops being viable at around ten real pieces: a 25-minute story is
+roughly 18MB, so the full set lands near half a gigabyte. Move to R2 before
+then.
 
 Note that a piece's listed duration (say *15 phút*) is the intended length of
 the finished recording, while the player shows the actual length of what
