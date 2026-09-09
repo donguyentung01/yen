@@ -29,7 +29,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "audio": "node scripts/gen-placeholder-audio.mjs"
+    "audio": "node scripts/gen-placeholder-audio.mjs",
+    "r2:upload": "node scripts/upload-r2.mjs"
   },
   "private": true
 }

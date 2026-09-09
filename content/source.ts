@@ -7,25 +7,21 @@
  * handle a loading state, so swapping the local manifest for a network fetch
  * later touches this file and nothing else.
  *
- * To go remote:
- *   1. Set REMOTE_BASE to the R2 public bucket URL.
- *   2. Have loadManifest() fetch `${REMOTE_BASE}/manifest.json`, falling back
- *      to the bundled copy when offline.
- *   3. Have resolveAudioSource() return `{ uri: `${REMOTE_BASE}/${piece.path}` }`.
- *   4. Delete localAudio.ts.
+ * Content is served from Cloudflare R2. Both the audio and the catalog itself
+ * live in the bucket, which is what makes titles, durations and whole new
+ * pieces editable in production: change manifest.json, upload it, and every
+ * user sees it on next launch — no app store round trip.
  *
- * No screen changes. Manifest paths already mirror the bucket layout.
+ * The manifest bundled at build time stays as the offline fallback.
+ *
+ * Publishing a change:
+ *   npm run r2:upload -- --manifest-only   # a title or duration edit
+ *   npm run r2:upload -- --only that-tinh  # re-recorded one trigger
+ *   npm run r2:upload                      # everything
  */
 
-import manifest from './manifest.json';
-import { LOCAL_AUDIO } from './localAudio';
+import bundledManifest from './manifest.json';
 import { TRIGGERS, getTrigger, type ContentType, type TriggerId } from './triggers';
-
-/**
- * What Metro's `require()` returns for a bundled asset: an opaque numeric id on
- * native, a URL string on web.
- */
-export type AudioAsset = number | string;
 
 export interface Piece {
   id: string;
@@ -49,14 +45,64 @@ interface Manifest {
   pieces: Piece[];
 }
 
-const data = manifest as unknown as Manifest;
+const bundled = bundledManifest as unknown as Manifest;
 
-/** Swap to the R2 public bucket URL to go remote. */
-const REMOTE_BASE: string | null = null;
+/**
+ * Public R2 bucket. Audio and the catalog both live here.
+ *
+ * This is an `r2.dev` development URL — rate-limited, and with no CDN caching
+ * or access controls. Before real users it needs a custom domain, at which
+ * point the caching policy matters: a short max-age on manifest.json so title
+ * edits appear, and a long immutable one on the audio.
+ */
+const REMOTE_BASE: string | null =
+  'https://pub-f60d69be821846bcb555bdda272c4b5e.r2.dev';
 
+/** Give up on the network rather than leave someone staring at a spinner. */
+const MANIFEST_TIMEOUT_MS = 6000;
+
+/**
+ * Fetched once per app launch and reused. Every screen calls into this layer,
+ * and without memoising, each one would open its own request.
+ */
+let manifestPromise: Promise<Manifest> | null = null;
+
+async function fetchRemoteManifest(): Promise<Manifest> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), MANIFEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${REMOTE_BASE}/manifest.json`, {
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`manifest ${res.status}`);
+    const json = (await res.json()) as Manifest;
+    // A malformed or empty manifest would empty the whole app, so only accept
+    // one that actually has content.
+    if (!Array.isArray(json.pieces) || json.pieces.length === 0) {
+      throw new Error('manifest has no pieces');
+    }
+    return json;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * The remote catalog, falling back to the copy bundled at build time.
+ *
+ * The fallback is what makes titles editable in production without shipping an
+ * app: normally you get whatever is in the bucket, but a user who is offline or
+ * on a bad connection still gets a working app with the content that shipped.
+ */
 async function loadManifest(): Promise<Manifest> {
-  // Remote: fetch here, fall back to the bundled copy when offline.
-  return data;
+  if (!REMOTE_BASE) return bundled;
+  if (!manifestPromise) {
+    manifestPromise = fetchRemoteManifest().catch((err) => {
+      console.warn('Falling back to bundled manifest:', err?.message ?? err);
+      return bundled;
+    });
+  }
+  return manifestPromise;
 }
 
 /**
@@ -170,19 +216,15 @@ export async function getPiece(id: string): Promise<Piece | undefined> {
 }
 
 /**
- * What to hand the audio player. A bundled asset today; `{ uri }` once remote.
- * All three shapes are accepted by expo-audio, which is why the swap stays
- * local.
+ * What to hand the audio player: a URL into the bucket.
  *
- * The bundled case is platform-dependent: Metro's `require()` yields an opaque
- * numeric asset id on native but a URL string on web, so this is deliberately
- * not narrowed to `number`.
+ * Manifest paths are bucket keys verbatim, so this is plain concatenation with
+ * no translation table — which is why nothing had to be renamed to go remote.
+ *
+ * Note there is no offline fallback for audio itself. The catalog still renders
+ * from the bundled manifest without a network, but playing a piece needs one,
+ * at least until on-device caching lands.
  */
-export function resolveAudioSource(
-  piece: Piece
-): AudioAsset | { uri: string } {
-  if (REMOTE_BASE) {
-    return { uri: `${REMOTE_BASE}/${piece.path}` };
-  }
-  return LOCAL_AUDIO[piece.path];
+export function resolveAudioSource(piece: Piece): { uri: string } {
+  return { uri: `${REMOTE_BASE}/${piece.path}` };
 }
